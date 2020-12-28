@@ -1,3 +1,0 @@
-{"_id":{"$oid":"5f074b92352f114228e40383"},"name":"sarthak","email":"sarthak01@test.com","password":"$2b$10$eTyfLE0sZCynVWyG04UBUOfGoxik5cTkrcOzj8ZoY84e7vpZ91LIC","date":{"$date":{"$numberLong":"1594313618335"}},"__v":{"$numberInt":"0"},"displayPicture":"/api/image/display/ea34a88dad18e04ca74324c2a6f382a1.jpg"}
-
-{"_id":{"$oid":"5f09f8f2f864891ba4243986"},"laundryNumber":"F-115","rollNumber":{"$numberDouble":"89563219465"},"roomInfo":"E-208","hostel":"FRE","role":"Student","user":{"$oid":"5f074b92352f114228e40383"},"__v":{"$numberInt":"0"}}
