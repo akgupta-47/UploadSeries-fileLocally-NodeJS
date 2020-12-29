@@ -1,11 +1,10 @@
 const express = require('express');
 const multer = require('multer');
-const sharp = require('sharp');
 const ejs = require('ejs');
 const path = require('path');
 
 // set storage engine
-/* const storage = multer.diskStorage({
+const storage = multer.diskStorage({
     destination: './public/uploads',
     filename: function(req, file, callback){
         // callback has 2 arguments error and filename
@@ -16,18 +15,16 @@ const path = require('path');
         // file.fieldname + '-' + Date.now() + path.extname(file.originalname)
         callback(null, `${file.fieldname}-${Date.now()}${path.extname(file.originalname)}`);
     }
-}) */
+})
 // html code requirements = form action="/upload" method="POST" enctype="multipart/form-data"
-
-const storage = multer.memoryStorage();
 
 // Init upload variable, .single- specify to allow only single image upload
 const upload = multer({
     storage,
     limits: {fileSize: 1000000},
-    fileFilter: (req,file,cb) => {
+    /* fileFilter: (req,file,cb) => {
         checkFileType(file, cb);
-    } 
+    } */
 }).single('myImage');
 
 // check file type
@@ -46,46 +43,34 @@ const checkFileType = (file, cb) => {
     }
 }
 
-// Resize image to particular needs
-const ImageResizer = async (req,res, next) => {
-    if (!req.file) return;
-    // console.log(typeof req.next);
-
-    req.file.filename = `${req.file.fieldname}-${Date.now()}${path.extname(req.file.originalname)}`;
-  
-    await sharp(req.file.buffer)
-      .resize(500, 500)    
-      .toFormat('jpeg')
-      .jpeg({ quality: 90 })
-      .toFile(`./public/uploads/${req.file.filename}`, 
-        (err) => {
-            if (err) {
-                res.render('index', {
-                    msg: err
-                })
-            }else{
-                // console.log(req.file);
-                // res.send('test');
-                if(req.file == undefined) {
-                    res.render('index', {
-                        msg: 'Error: File not submitted!!'
-                    });
-                }else{
-                    res.render('index', {
-                        msg: 'File Uploaded!!',
-                        file: `uploads/${req.file.filename}`
-                    })
-                }
-            }
-        });
-}
-
 // Init app variable
 const app = express();
 
 app.get('/', (req, res) => res.render('index'));
 
-app.post('/upload',upload, ImageResizer);
+app.post('/upload', (req, res) => {
+    // res.send('test');
+    upload(req, res, (err) => {
+        if (err) {
+            res.render('index', {
+                msg: err
+            })
+        }else{
+            // console.log(req.file);
+            // res.send('test');
+            if(req.file == undefined) {
+                res.render('index', {
+                    msg: 'Error: File not submitted!!'
+                });
+            }else{
+                res.render('index', {
+                    msg: 'File Uploaded!!',
+                    file: `uploads/${req.file.filename}`
+                })
+            }
+        }
+    })
+})
 
 // EJS
 app.set('view engine', 'ejs');
@@ -95,3 +80,46 @@ app.use(express.static('./public'));
 const port = 3000 || PROCESS.env.PORT;
 
 app.listen(port, () => console.log(`Server listening on port ${port}`));
+
+//////////////////////// METHOD 2 ///////////////////////////
+// const multerStorage = multer.memoryStorage();
+const multerStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'public/uploads');
+    },
+    filename: (req, file, cb) => {
+        const ext = file.mimetype.split('/')[1];
+    }
+});
+
+const multerFilter = (req, file, callback) => {
+  if (file.mimetype.startsWith('image')) {
+    callback(null, true);
+  } else {
+    callback(
+      new AppError('Not an image! Please upload only images.', 400),
+      false
+    );
+  }
+};
+
+const upload = multer({
+  storage: multerStorage,
+  fileFilter: multerFilter,
+});
+
+exports.uploadUserPhoto = upload.single('photo');
+
+exports.resizeUserPhoto = catchAsync(async (req, res, next) => {
+  if (!req.file) return next();
+
+  req.file.filename = `user-${req.user.id}-${Date.now()}.jpeg`;
+
+  await sharp(req.file.buffer)
+    .resize(500, 500)
+    .toFormat('jpeg')
+    .jpeg({ quality: 90 })
+    .toFile(`public/img/users/${req.file.filename}`);
+
+  next();
+});
