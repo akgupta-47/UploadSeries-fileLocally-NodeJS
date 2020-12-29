@@ -5,18 +5,6 @@ const ejs = require('ejs');
 const path = require('path');
 
 // set storage engine
-/* const storage = multer.diskStorage({
-    destination: './public/uploads',
-    filename: function(req, file, callback){
-        // callback has 2 arguments error and filename
-        // we can decide the format here, fieldname: the one used in html code for field
-        // extname: gives the file extension
-        // original name is the property of original name used by the file when Uploaded
-        // `${file.fieldname}-${Date.now()}{path.extname(file.originalname)}`
-        // file.fieldname + '-' + Date.now() + path.extname(file.originalname)
-        callback(null, `${file.fieldname}-${Date.now()}${path.extname(file.originalname)}`);
-    }
-}) */
 // html code requirements = form action="/upload" method="POST" enctype="multipart/form-data"
 
 const storage = multer.memoryStorage();
@@ -54,9 +42,7 @@ const ImageResizer = async (req,res, next) => {
     req.file.filename = `${req.file.fieldname}-${Date.now()}${path.extname(req.file.originalname)}`;
   
     await sharp(req.file.buffer)
-      .resize(500, 500)    
-      .toFormat('jpeg')
-      .jpeg({ quality: 90 })
+      .resize(500, 500)
       .toFile(`./public/uploads/${req.file.filename}`, 
         (err) => {
             if (err) {
